@@ -40,12 +40,12 @@ npm run dev           # http://localhost:5173 returns 200
 
 ## Still to do (Aalt)
 
-1. **Fork**: `npx ai-hero-cli fork`. This wipes git history to one commit and creates a **public** repo on your GitHub account, then pushes there as `origin`. Course needs it public (free Actions minutes). Not run yet: it needs your OK. Its steps are: delete `.git`, `git init`, stage everything, commit, `gh repo create --public`, push. Staging respects the working-tree `.gitignore`, so the `.claude/admiral/` line keeps the board out. `.git/info/exclude` is deleted. This SETUP.md gets committed to the public fork too. It lists secret names only, no values.
+1. **Fork: DONE 2026-11-09** → https://github.com/aaltw/software-factories (`origin`). Upstream course updates arrive via `npm run pull`. Notes kept for reference: `npx ai-hero-cli fork`. This wipes git history to one commit and creates a **public** repo on your GitHub account, then pushes there as `origin`. Course needs it public (free Actions minutes). Not run yet: it needs your OK. Its steps are: delete `.git`, `git init`, stage everything, commit, `gh repo create --public`, push. Staging respects the working-tree `.gitignore`, so the `.claude/admiral/` line keeps the board out. `.git/info/exclude` is deleted. This SETUP.md gets committed to the public fork too. It lists secret names only, no values.
 2. **Plan**: the course expects a Claude plan of $100/month or more. Aalt has Claude Team, Codex, and Copilot credits (via Pi). For the factory in CI there are two options:
    - Claude: generate `CLAUDE_CODE_OAUTH_TOKEN` with `claude setup-token`, if the Team seat allows it.
    - Copilot: a fine-grained PAT with the "Copilot Requests" permission, saved as `COPILOT_GITHUB_TOKEN`. The course supports this route.
 
-   Codex can't use a login in CI. It needs an API key, billed per token.
+   Update 2026-11-09: a Team seat can't use `claude setup-token`, so the Claude route is out. Go with Copilot first. The last-resort fallback is a private OpenRouter key. Claude Code can run through OpenRouter's Anthropic-compatible endpoint, but it is billed per Opus token. Codex can't use a login in CI. It needs an API key, billed per token.
 
 ## Secrets (names only, never commit values)
 
