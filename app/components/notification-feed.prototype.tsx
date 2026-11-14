@@ -26,6 +26,7 @@ import {
 	BellOff,
 	Check,
 	CheckCheck,
+	Mail,
 	ChevronLeft,
 	ChevronRight,
 	MessageSquare,
@@ -879,8 +880,18 @@ export function NotificationsPage() {
 							{ns.map((n) => (
 								<article
 									key={n.id}
+									onClick={() => s.clickItem(n)}
+									onKeyDown={(e) => {
+										if (e.key === "Enter") s.clickItem(n);
+									}}
+									tabIndex={0}
+									title={
+										n.kind === "comment-reply"
+											? "Go to reply"
+											: "View refund request"
+									}
 									className={cn(
-										"flex gap-4 rounded-lg border p-4",
+										"group relative flex cursor-pointer gap-4 rounded-lg border p-4 transition-colors hover:bg-accent/40",
 										!n.readAt && "border-primary/40 bg-primary/5",
 									)}
 								>
@@ -892,11 +903,41 @@ export function NotificationsPage() {
 											>
 												{n.title}
 											</div>
-											<div
-												className="shrink-0 text-xs text-muted-foreground"
-												suppressHydrationWarning
-											>
-												{ago(n.insertedAt)}
+											<div className="relative shrink-0">
+												<div
+													className="text-xs text-muted-foreground group-focus-within:invisible group-hover:invisible"
+													suppressHydrationWarning
+												>
+													{ago(n.insertedAt)}
+												</div>
+												<div className="invisible absolute -top-1.5 right-0 flex gap-0.5 rounded-md border bg-background p-0.5 shadow-sm group-focus-within:visible group-hover:visible">
+													<button
+														type="button"
+														title={n.readAt ? "Mark as unread" : "Mark as read"}
+														onClick={(e) => {
+															e.stopPropagation();
+															n.readAt ? s.markUnread(n.id) : s.markRead(n.id);
+														}}
+														className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+													>
+														{n.readAt ? (
+															<Mail className="size-3.5" />
+														) : (
+															<Check className="size-3.5" />
+														)}
+													</button>
+													<button
+														type="button"
+														title="Archive"
+														onClick={(e) => {
+															e.stopPropagation();
+															s.archive(n.id);
+														}}
+														className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+													>
+														<Archive className="size-3.5" />
+													</button>
+												</div>
 											</div>
 										</div>
 										{n.kind === "comment-reply" ? (
@@ -914,33 +955,6 @@ export function NotificationsPage() {
 												{n.note}
 											</p>
 										)}
-										<div className="mt-3 flex gap-3 text-xs">
-											<button
-												type="button"
-												onClick={() => s.clickItem(n)}
-												className="font-medium text-primary hover:underline"
-											>
-												{n.kind === "comment-reply"
-													? "Go to reply"
-													: "View refund request"}
-											</button>
-											<button
-												type="button"
-												onClick={() =>
-													n.readAt ? s.markUnread(n.id) : s.markRead(n.id)
-												}
-												className="text-muted-foreground hover:text-foreground"
-											>
-												{n.readAt ? "Mark unread" : "Mark read"}
-											</button>
-											<button
-												type="button"
-												onClick={() => s.archive(n.id)}
-												className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
-											>
-												<Archive className="size-3" /> Archive
-											</button>
-										</div>
 									</div>
 								</article>
 							))}
