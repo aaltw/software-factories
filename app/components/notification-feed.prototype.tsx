@@ -323,6 +323,7 @@ export const VARIANTS = [
 	{ key: "A", name: "Bell + dropdown" },
 	{ key: "B", name: "Nav item + full page" },
 	{ key: "C", name: "Slide-over, by course" },
+	{ key: "D", name: "Combined: dot bell → overview" },
 ] as const;
 type VariantKey = (typeof VARIANTS)[number]["key"];
 
@@ -334,6 +335,7 @@ interface Options {
 	readRule: ReadRule;
 	archiveRule: ArchiveRule;
 	empty: boolean;
+	bellPos: "top" | "bottom";
 }
 
 interface FeedStore {
@@ -400,6 +402,7 @@ export function NotificationFeedProvider({
 		readRule: "click",
 		archiveRule: "all",
 		empty: false,
+		bellPos: "top",
 	});
 	const [lastAction, setLastAction] = useState("—");
 	const [incomingIdx, setIncomingIdx] = useState(0);
@@ -580,6 +583,12 @@ export function NotificationEntry({
 	if (placement === "header" && s.variant === "A") return <VariantABell />;
 	if (placement === "nav" && s.variant === "B") return <VariantBNavItem />;
 	if (placement === "footer" && s.variant === "C") return <VariantCBell />;
+	if (s.variant === "D") {
+		if (placement === "header" && s.options.bellPos === "top")
+			return <VariantDBell placement="header" />;
+		if (placement === "footer" && s.options.bellPos === "bottom")
+			return <VariantDBell placement="footer" />;
+	}
 	return null;
 }
 
@@ -720,6 +729,28 @@ function VariantABell() {
 
 // ─── Variant B: nav item + full page ──────────────────────────────────────
 
+// ─── Variant D: A's bell (dot only, top or bottom) → B's overview page,
+//     grouped by course (from C), with mark all as read ───────────────────
+
+function VariantDBell({ placement }: { placement: "header" | "footer" }) {
+	const s = useFeed();
+	return (
+		<Link
+			to="/notifications"
+			title={s.unseen > 0 ? "New notifications" : "Notifications"}
+			className={cn(
+				"relative rounded-md text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+				placement === "header" ? "p-1.5" : "p-1 text-sidebar-foreground/50",
+			)}
+		>
+			<Bell className="size-4" />
+			{s.unseen > 0 && (
+				<span className="absolute right-0.5 top-0.5 size-2 rounded-full bg-red-500 ring-2 ring-sidebar" />
+			)}
+		</Link>
+	);
+}
+
 function VariantBNavItem() {
 	const s = useFeed();
 	return (
@@ -747,6 +778,8 @@ export function NotificationsPage() {
 	const [filter, setFilter] = useState<
 		"all" | "unread" | "replies" | "refunds"
 	>("all");
+	const [groupBy, setGroupBy] = useState<"time" | "course">("course");
+	const byCourse = s.variant === "D" && groupBy === "course";
 	// opening the page = opening the feed
 	// biome-ignore lint/correctness/useExhaustiveDependencies: run once per mount
 	useEffect(() => {
@@ -771,9 +804,11 @@ export function NotificationsPage() {
 	);
 	const groups: Array<[string, ProtoNotification[]]> = [];
 	for (const n of list) {
-		const g = groupLabel(n.insertedAt);
-		const last = groups[groups.length - 1];
-		if (last && last[0] === g) last[1].push(n);
+		const g = byCourse ? n.courseTitle : groupLabel(n.insertedAt);
+		const existing = byCourse
+			? groups.find(([k]) => k === g)
+			: groups[groups.length - 1];
+		if (existing && existing[0] === g) existing[1].push(n);
 		else groups.push([g, [n]]);
 	}
 
@@ -795,6 +830,26 @@ export function NotificationsPage() {
 					<CheckCheck className="size-4" /> Mark all as read
 				</button>
 			</div>
+			{s.variant === "D" && (
+				<div className="mb-4 flex items-center gap-1 text-xs">
+					<span className="mr-1 text-muted-foreground">Group by</span>
+					{(["course", "time"] as const).map((g) => (
+						<button
+							key={g}
+							type="button"
+							onClick={() => setGroupBy(g)}
+							className={cn(
+								"rounded-full px-2.5 py-1 capitalize",
+								groupBy === g
+									? "bg-accent font-medium text-accent-foreground"
+									: "text-muted-foreground hover:bg-accent/50",
+							)}
+						>
+							{g}
+						</button>
+					))}
+				</div>
+			)}
 			<div className="mb-6 flex gap-2 border-b">
 				{(["all", "unread", "replies", "refunds"] as const).map((f) => (
 					<button
@@ -1155,6 +1210,23 @@ export function NotificationPrototypeBar() {
 						<option value="90d">last 90 days</option>
 					</select>
 				</label>
+				{s.variant === "D" && (
+					<label className="flex items-center gap-1">
+						bell
+						<select
+							value={s.options.bellPos}
+							onChange={(e) =>
+								s.setOptions({
+									bellPos: e.target.value as "top" | "bottom",
+								})
+							}
+							className="rounded bg-zinc-800 px-1"
+						>
+							<option value="top">top</option>
+							<option value="bottom">bottom</option>
+						</select>
+					</label>
+				)}
 				<label className="flex items-center gap-1">
 					<input
 						type="checkbox"
