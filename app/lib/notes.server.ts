@@ -1,6 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { courses, lessons, modules, notes } from "~/db/schema";
-import type { Db } from "~/lib/comments.server";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import * as schema from "~/db/schema";
 import { MAX_NOTE_LENGTH } from "~/lib/notes";
 
 // ─── Notes ───
@@ -9,6 +10,8 @@ import { MAX_NOTE_LENGTH } from "~/lib/notes";
 //
 // Every function takes the database first, so tests can hand in an in-memory
 // one. Uses positional parameters (project convention).
+
+export type Db = BetterSQLite3Database<typeof schema>;
 
 type Note = typeof notes.$inferSelect;
 

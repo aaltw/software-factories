@@ -1,6 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { bookmarks, courses, lessons, modules } from "~/db/schema";
-import type { Db } from "~/lib/comments.server";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import * as schema from "~/db/schema";
 
 // ─── Bookmarks ───
 // A Student's flag on a Lesson, so they can find it again. One per Student per
@@ -8,6 +9,8 @@ import type { Db } from "~/lib/comments.server";
 //
 // Every function takes the database first, so tests can hand in an in-memory
 // one. Uses positional parameters (project convention).
+
+export type Db = BetterSQLite3Database<typeof schema>;
 
 function findBookmark(db: Db, userId: number, lessonId: number) {
   return db
